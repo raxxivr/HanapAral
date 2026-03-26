@@ -25,7 +25,6 @@ private val Primary = Color(0xFF1565C0)
 private val Background = Color(0xFFF5F7FF)
 private val TextPrimary = Color(0xFF1A237E)
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen() {
@@ -61,7 +60,6 @@ fun ProfileScreen() {
             message = null
         }
     }
-
 
     fun saveProfile() {
         val uid = user?.uid ?: return
@@ -113,17 +111,49 @@ fun ProfileScreen() {
             return@Scaffold
         }
 
-        Column(
+
+
+@Composable
+fun ProfileHeader(name: String) {
+    val initials = name.take(2).uppercase().ifEmpty { "?" }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(20.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .size(70.dp)
+                .clip(CircleShape)
+                .background(Primary),
+            contentAlignment = Alignment.Center
         ) {
-
-            ProfileHeader(name)
-
-            Text("Student Profile", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Primary)
+            Text(initials, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
     }
+}
+
+@Composable
+fun ProfileTextField(
+    value: String,
+    onChange: (String) -> Unit,
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    enabled: Boolean = true
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onChange,
+        label = { Text(label) },
+        leadingIcon = { Icon(icon, contentDescription = label, tint = Primary) },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp),
+        singleLine = true,
+        enabled = enabled
+    )
+}
+
+        @Composable
+        fun SaveButton(isSaving: Boolean, onClick: () -> Unit) {
+            Button(onClick = onClick, enabled = !isSaving) {
+                Text(if (isSaving) "Saving..." else "Save Profile")
+            }
+        }
+
