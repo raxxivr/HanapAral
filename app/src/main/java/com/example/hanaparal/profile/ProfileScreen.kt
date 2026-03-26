@@ -111,7 +111,45 @@ fun ProfileScreen() {
             return@Scaffold
         }
 
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(20.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
 
+            ProfileHeader(name)
+
+            Text("Student Profile", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Primary)
+
+            ProfileTextField(
+                value = name,
+                onChange = { name = it },
+                label = "Full Name",
+                icon = Icons.Default.AccountCircle
+            )
+
+            ProfileTextField(
+                value = course,
+                onChange = { course = it },
+                label = "Course",
+                icon = Icons.Default.Star
+            )
+
+            ProfileTextField(
+                value = email,
+                onChange = { email = it },
+                label = "Email",
+                icon = Icons.Default.MailOutline,
+                enabled = user?.email.isNullOrEmpty()
+            )
+
+            SaveButton(isSaving) { saveProfile() }
+        }
+    }
+}
 
 @Composable
 fun ProfileHeader(name: String) {
@@ -150,10 +188,44 @@ fun ProfileTextField(
     )
 }
 
-        @Composable
-        fun SaveButton(isSaving: Boolean, onClick: () -> Unit) {
-            Button(onClick = onClick, enabled = !isSaving) {
-                Text(if (isSaving) "Saving..." else "Save Profile")
-            }
+@Composable
+fun SaveButton(isSaving: Boolean, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        enabled = !isSaving,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Primary)
+    ) {
+        if (isSaving) {
+            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Saving...")
+        } else {
+            Text("Save Profile")
         }
+    }
+}
+
+
+fun loadProfile(
+    uid: String?,
+    db: FirebaseFirestore,
+    onResult: (User?) -> Unit
+) {
+    uid ?: return onResult(null)
+
+    db.collection("users").document(uid)
+        .get()
+        .addOnSuccessListener {
+            onResult(it.toObject(User::class.java))
+        }
+        .addOnFailureListener {
+            onResult(null)
+        }
+}
+
+
 
