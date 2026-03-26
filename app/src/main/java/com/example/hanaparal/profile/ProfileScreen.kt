@@ -9,6 +9,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import com.example.hanaparal.models.User
+
 
 private val Primary = Color(0xFF1565C0)
 private val Background = Color(0xFFF5F7FF)
@@ -31,11 +33,31 @@ fun ProfileScreen() {
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    Scaffold(
-        containerColor = Background
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Text("Profile Screen", fontSize = 20.sp)
+    LaunchedEffect(user?.uid) {
+        loadProfile(user?.uid, db) { loadedUser ->
+            loadedUser?.let {
+                name = it.name
+                course = it.course
+                email = it.email
+            }
+            isLoading = false
         }
     }
+
+    fun saveProfile() {
+        val uid = user?.uid ?: return
+
+        if (name.isBlank() || course.isBlank()) return
+
+        isSaving = true
+
+        val newUser = User(uid, name, course, email)
+
+        db.collection("users").document(uid)
+            .set(newUser.toMap())
+            .addOnSuccessListener { isSaving = false }
+            .addOnFailureListener { isSaving = false }
+    }
+
+    Scaffold {}
 }
