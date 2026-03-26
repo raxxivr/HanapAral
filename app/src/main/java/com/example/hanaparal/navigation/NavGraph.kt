@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.hanaparal.groups.CreateGroupScreen
+import com.example.hanaparal.groups.GroupListScreen
 
 @Composable
 fun SetupNavGraph(navController: NavHostController) {
@@ -14,19 +16,28 @@ fun SetupNavGraph(navController: NavHostController) {
     ) {
         composable(route = Screen.Login.route) {
             // Member 1: Implement LoginScreen here
-            Text(text = "Login Screen Placeholder")
+            // Temporary button to navigate to GroupList for testing
+            androidx.compose.material3.Button(onClick = { navController.navigate(Screen.GroupList.route) }) {
+                Text(text = "Go to Group List")
+            }
         }
         composable(route = Screen.Profile.route) {
             // Member 2: Implement ProfileScreen here
             Text(text = "Profile Screen Placeholder")
         }
         composable(route = Screen.GroupList.route) {
-            // Member 3: Implement GroupListScreen here
-            Text(text = "Group List Screen Placeholder")
+            GroupListScreen(
+                onCreateGroupClick = {
+                    navController.navigate(Screen.CreateGroup.route)
+                }
+            )
         }
         composable(route = Screen.CreateGroup.route) {
-            // Member 3: Implement CreateGroupScreen here
-            Text(text = "Create Group Screen Placeholder")
+            CreateGroupScreen(
+                onGroupCreated = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
