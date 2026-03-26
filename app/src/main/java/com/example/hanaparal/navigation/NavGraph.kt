@@ -5,9 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.hanaparal.admin.RemoteConfigManager
 
 @Composable
-fun SetupNavGraph(navController: NavHostController) {
+fun SetupNavGraph(
+    navController: NavHostController,
+    remoteConfigManager: RemoteConfigManager
+) {
     NavHost(
         navController = navController,
         startDestination = Screen.Login.route
