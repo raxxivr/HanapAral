@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "718143544708",
-    "project_id": "itew4-projects",
-    "storage_bucket": "itew4-projects.firebasestorage.app"
+    "project_number": "988357798428",
+    "project_id": "itew4-projects-304d3",
+    "storage_bucket": "itew4-projects-304d3.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:718143544708:android:5b50e1345b748db9bbd1d1",
+        "mobilesdk_app_id": "1:988357798428:android:ef15e8b09c82f4d5fd0dd9",
         "android_client_info": {
           "package_name": "com.example.hanaparal"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyD6Dw1Ppnnkn9dn72CcO5KigFUzzjbyjZQ"
+          "current_key": "AIzaSyDJ5efPWDCefiXcGQvOi2l2v6ysMB344to"
         }
       ],
       "services": {
