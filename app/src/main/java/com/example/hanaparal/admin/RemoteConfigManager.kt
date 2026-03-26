@@ -7,10 +7,16 @@ import com.google.firebase.remoteconfig.ConfigUpdateListener
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
+import javax.inject.Singleton
 
 data class AppConfig(
     val isGroupCreationEnabled: Boolean = true,
@@ -19,7 +25,8 @@ data class AppConfig(
     val isAdminPanelEnabled: Boolean = false
 )
 
-class RemoteConfigManager {
+@Singleton
+class RemoteConfigManager @Inject constructor() {
 
     private val remoteConfig = Firebase.remoteConfig
     private val _config = MutableStateFlow(AppConfig())
@@ -30,7 +37,7 @@ class RemoteConfigManager {
             minimumFetchIntervalInSeconds = 3600 // 1 hour for production
         }
         remoteConfig.setConfigSettingsAsync(configSettings)
-        
+
         val defaults = mapOf(
             "is_group_creation_enabled" to true,
             "announcement_header" to "Welcome to HanapAral!",
@@ -51,8 +58,7 @@ class RemoteConfigManager {
                     updateConfigState()
                 } else {
                     Log.e("RemoteConfig", "Fetch failed")
-                    // Fallback handled by using cached values in updateConfigState
-                    updateConfigState()
+                    updateConfigState() // Use cached values
                 }
             }
     }
@@ -92,5 +98,16 @@ class RemoteConfigManager {
             Log.e("RemoteConfig", "Force refresh failed", e)
             false
         }
+    }
+}
+
+// Hilt Module for RemoteConfigManager
+@Module
+@InstallIn(SingletonComponent::class)
+object RemoteConfigModule {
+    @Provides
+    @Singleton
+    fun provideRemoteConfigManager(): RemoteConfigManager {
+        return RemoteConfigManager()
     }
 }
