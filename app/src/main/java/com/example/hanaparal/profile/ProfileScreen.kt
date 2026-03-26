@@ -1,19 +1,30 @@
 package com.example.hanaparal.profile
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.hanaparal.models.User
-
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 private val Primary = Color(0xFF1565C0)
 private val Background = Color(0xFFF5F7FF)
+private val TextPrimary = Color(0xFF1A237E)
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,20 +55,75 @@ fun ProfileScreen() {
         }
     }
 
+    LaunchedEffect(message) {
+        message?.let {
+            snackbarHostState.showSnackbar(it)
+            message = null
+        }
+    }
+
+
     fun saveProfile() {
         val uid = user?.uid ?: return
 
-        if (name.isBlank() || course.isBlank()) return
+        if (name.isBlank() || course.isBlank()) {
+            message = "Please fill all required fields"
+            return
+        }
 
         isSaving = true
 
-        val newUser = User(uid, name, course, email)
+        val newUser = User(uid, name.trim(), course.trim(), email.trim())
 
         db.collection("users").document(uid)
             .set(newUser.toMap())
-            .addOnSuccessListener { isSaving = false }
-            .addOnFailureListener { isSaving = false }
+            .addOnSuccessListener {
+                isSaving = false
+                message = "Profile saved successfully!"
+            }
+            .addOnFailureListener {
+                isSaving = false
+                message = "Failed to save profile"
+            }
     }
 
-    Scaffold {}
-}
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Background,
+        topBar = {
+            TopAppBar(
+                title = { Text("My Profile", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Primary,
+                    titleContentColor = Color.White
+                )
+            )
+        }
+    ) { padding ->
+
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Primary)
+            }
+            return@Scaffold
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(20.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+
+            ProfileHeader(name)
+
+            Text("Student Profile", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Primary)
+        }
+    }
