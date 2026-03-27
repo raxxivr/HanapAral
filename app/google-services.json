@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "988357798428",
+    "project_id": "itew4-projects-304d3",
+    "storage_bucket": "itew4-projects-304d3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:988357798428:android:ef15e8b09c82f4d5fd0dd9",
+        "android_client_info": {
+          "package_name": "com.example.hanaparal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "988357798428-c82f8as8qc822r0tedov6drntg88fbau.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJ5efPWDCefiXcGQvOi2l2v6ysMB344to"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "988357798428-c82f8as8qc822r0tedov6drntg88fbau.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

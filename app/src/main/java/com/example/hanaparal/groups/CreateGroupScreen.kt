@@ -1,15 +1,9 @@
 package com.example.hanaparal.groups
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import android.widget.Toast
-import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,7 +16,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateGroupScreen(onGroupCreated: () -> Unit) {
+fun CreateGroupScreen(
+    maxMembers: Int = 10,
+    onBack: () -> Unit
+) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var subject by remember { mutableStateOf("") }
@@ -32,74 +29,92 @@ fun CreateGroupScreen(onGroupCreated: () -> Unit) {
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(text = "Create New Study Group", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Group Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = description,
-            onValueChange = { description = it },
-            label = { Text("Description") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = subject,
-            onValueChange = { subject = it },
-            label = { Text("Subject") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (isLoading) {
-            CircularProgressIndicator()
-        } else {
-            Button(
-                onClick = {
-                    val userId = auth.currentUser?.uid
-                    if (userId != null && name.isNotBlank() && subject.isNotBlank()) {
-                        isLoading = true
-                        val newGroupRef = db.collection("groups").document()
-                        val newGroup = StudyGroup(
-                            id = newGroupRef.id,
-                            name = name,
-                            description = description,
-                            subject = subject,
-                            creatorId = userId,
-                            members = listOf(userId)
-                        )
-                        newGroupRef.set(newGroup)
-                            .addOnSuccessListener {
-                                isLoading = false
-                                Toast.makeText(context, "Group Created!", Toast.LENGTH_SHORT).show()
-                                onGroupCreated()
-                            }
-                            .addOnFailureListener {
-                                isLoading = false
-                                Toast.makeText(context, "Failed: ${it.message}", Toast.LENGTH_SHORT).show()
-                            }
-                    } else {
-                        Toast.makeText(context, "Please fill in all required fields", Toast.LENGTH_SHORT).show()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Create Study Group") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                },
+                }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            Text(
+                text = "Maximum members allowed: $maxMembers",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Group Name") },
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Create Group")
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Description") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = subject,
+                onValueChange = { subject = it },
+                label = { Text("Subject") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (isLoading) {
+                CircularProgressIndicator()
+            } else {
+                Button(
+                    onClick = {
+                        val userId = auth.currentUser?.uid
+                        if (userId != null && name.isNotBlank() && subject.isNotBlank()) {
+                            isLoading = true
+                            val newGroupRef = db.collection("groups").document()
+                            val newGroup = StudyGroup(
+                                id = newGroupRef.id,
+                                name = name,
+                                description = description,
+                                subject = subject,
+                                creatorId = userId,
+                                members = listOf(userId)
+                            )
+                            newGroupRef.set(newGroup)
+                                .addOnSuccessListener {
+                                    isLoading = false
+                                    Toast.makeText(context, "Group Created!", Toast.LENGTH_SHORT).show()
+                                    onBack() // Go back after success
+                                }
+                                .addOnFailureListener {
+                                    isLoading = false
+                                    Toast.makeText(context, "Failed: ${it.message}", Toast.LENGTH_SHORT).show()
+                                }
+                        } else {
+                            Toast.makeText(context, "Please fill in all required fields", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Create Group")
+                }
             }
         }
     }

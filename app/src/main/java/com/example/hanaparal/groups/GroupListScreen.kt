@@ -18,7 +18,11 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
-fun GroupListScreen(onCreateGroupClick: () -> Unit) {
+fun GroupListScreen(
+    isGroupCreationEnabled: Boolean = true,
+    maxMembersPerGroup: Int = 10,
+    onCreateGroupClick: () -> Unit
+) {
     val db = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
     val context = LocalContext.current
@@ -41,8 +45,10 @@ fun GroupListScreen(onCreateGroupClick: () -> Unit) {
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = onCreateGroupClick) {
-                Icon(Icons.Default.Add, contentDescription = "Create Group")
+            if (isGroupCreationEnabled) {
+                FloatingActionButton(onClick = onCreateGroupClick) {
+                    Icon(Icons.Default.Add, contentDescription = "Create Group")
+                }
             }
         }
     ) { padding ->
@@ -66,8 +72,14 @@ fun GroupListScreen(onCreateGroupClick: () -> Unit) {
                     GroupItem(
                         group = group,
                         currentUserId = currentUserId,
+                        maxMembers = maxMembersPerGroup,
                         onJoinClick = {
                             if (currentUserId != null) {
+                                if (group.members.size >= maxMembersPerGroup) {
+                                    Toast.makeText(context, "Group is full!", Toast.LENGTH_SHORT).show()
+                                    return@GroupItem
+                                }
+                                
                                 db.collection("groups").document(group.id)
                                     .update("members", FieldValue.arrayUnion(currentUserId))
                                     .addOnSuccessListener {
@@ -87,8 +99,14 @@ fun GroupListScreen(onCreateGroupClick: () -> Unit) {
 }
 
 @Composable
-fun GroupItem(group: StudyGroup, currentUserId: String?, onJoinClick: () -> Unit) {
+fun GroupItem(
+    group: StudyGroup, 
+    currentUserId: String?, 
+    maxMembers: Int,
+    onJoinClick: () -> Unit
+) {
     val isMember = currentUserId != null && group.members.contains(currentUserId)
+    val isFull = group.members.size >= maxMembers
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -104,13 +122,19 @@ fun GroupItem(group: StudyGroup, currentUserId: String?, onJoinClick: () -> Unit
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Members: ${group.members.size}")
+                Text(
+                    text = "Members: ${group.members.size} / $maxMembers",
+                    color = if (isFull) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                )
                 if (!isMember) {
-                    Button(onClick = onJoinClick) {
-                        Text("Join")
+                    Button(
+                        onClick = onJoinClick,
+                        enabled = !isFull
+                    ) {
+                        Text(if (isFull) "Full" else "Join")
                     }
                 } else {
-                    Text(text = "Joined", color = MaterialTheme.colorScheme.primary)
+                    Text(text = "Joined", color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                 }
             }
         }

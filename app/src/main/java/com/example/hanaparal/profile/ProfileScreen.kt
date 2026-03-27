@@ -1,11 +1,5 @@
 package com.example.hanaparal.profile
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -34,13 +28,18 @@ private val BackgroundGray = Color(0xFFF8F9FA)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    isAdminPanelEnabled: Boolean = false,
+    onAdminClick: () -> Unit = {},
+    onNavigateToGroups: () -> Unit = {}
+) {
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
     val user = auth.currentUser
 
     var name by remember { mutableStateOf("") }
     var course by remember { mutableStateOf("") }
+    var year by remember { mutableStateOf("") }
     var email by remember { mutableStateOf(user?.email ?: "") }
 
     var isLoading by remember { mutableStateOf(true) }
@@ -49,7 +48,7 @@ fun ProfileScreen() {
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // LOAD PROFILE LOGIC - Gumagana lang kapag may UID
+    // LOAD PROFILE LOGIC
     LaunchedEffect(user?.uid) {
         user?.uid?.let { uid ->
             db.collection("users").document(uid).get()
@@ -58,6 +57,7 @@ fun ProfileScreen() {
                     if (data != null) {
                         name = data.name
                         course = data.course
+                        year = data.year
                         email = data.email
                     }
                     isLoading = false
@@ -92,6 +92,7 @@ fun ProfileScreen() {
             uid = uid,
             name = name.trim(),
             course = course.trim(),
+            year = year.trim(),
             email = email.trim()
         )
 
@@ -115,7 +116,23 @@ fun ProfileScreen() {
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = PrimaryBlue,
                     titleContentColor = Color.White
-                )
+                ),
+                actions = {
+                    if (isAdminPanelEnabled) {
+                        IconButton(onClick = onAdminClick) {
+                            Icon(Icons.Default.Settings, contentDescription = "Admin", tint = Color.White)
+                        }
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onNavigateToGroups,
+                containerColor = PrimaryBlue,
+                contentColor = Color.White,
+                icon = { Icon(Icons.Default.Search, contentDescription = null) },
+                text = { Text("Find Groups") }
             )
         }
     ) { padding ->
@@ -168,7 +185,8 @@ fun ProfileScreen() {
 
                         ProfileTextField(name, { name = it }, "Full Name", Icons.Default.Person)
                         ProfileTextField(course, { course = it }, "Course", Icons.Default.Edit)
-                        ProfileTextField(email, { email = it }, "Email Address", Icons.Default.Email, true)
+                        ProfileTextField(year, { year = it }, "Year Level", Icons.Default.Info)
+                        ProfileTextField(email, { email = it }, "Email Address", Icons.Default.Email, false)
 
                         Spacer(modifier = Modifier.height(8.dp))
 

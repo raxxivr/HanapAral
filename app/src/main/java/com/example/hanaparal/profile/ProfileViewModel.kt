@@ -54,23 +54,21 @@ class ProfileViewModel @Inject constructor(
             try {
                 val updateData = mutableMapOf<String, Any>(
                     "name" to name,
-                    "course" to course
+                    "course" to course,
+                    "year" to year
                 )
-                if (year.isNotEmpty()) {
-                    updateData["year"] = year
-                }
                 
                 firestore.collection("users").document(uid).update(updateData).await()
                 loadProfile()
             } catch (e: Exception) {
-                // If update fails because document doesn't have fields yet, try set
+                // If update fails because document doesn't exist, try set
                 try {
                     val user = User(
                         uid = uid, 
                         name = name, 
                         course = course, 
-                        year = year, 
-                        email = auth.currentUser?.email ?: ""
+                        email = auth.currentUser?.email ?: "",
+                        year = year
                     )
                     firestore.collection("users").document(uid).set(user).await()
                     _profileState.value = ProfileState.Success(user)
