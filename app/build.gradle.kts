@@ -3,16 +3,16 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.services)
     alias(libs.plugins.hilt)
-    id("kotlin-kapt")
+    id("kotlin-kapt")  // Use id() instead of alias for kapt
 }
 
 android {
     namespace = "com.example.hanaparal"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.hanaparal"
-        minSdk = 29
+        minSdk = 24
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -29,16 +29,23 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.8"  // Keep this
     }
 }
 
@@ -53,9 +60,6 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.biometric)
-
-    // Compose compiler (required for Kotlin 1.9+)
-    implementation(libs.androidx.compose.compiler)
 
     // Hilt
     implementation(libs.hilt.android)
