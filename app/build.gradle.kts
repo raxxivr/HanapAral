@@ -7,6 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.hanaparal"
+    // Updated to 36 as required by newer dependencies
     compileSdk = 36
 
     defaultConfig {
