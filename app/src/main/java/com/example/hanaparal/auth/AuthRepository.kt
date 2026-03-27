@@ -1,6 +1,7 @@
 package com.example.hanaparal.auth
 
 import android.content.Context
+import com.example.hanaparal.R
 import com.example.hanaparal.models.User
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -22,9 +23,19 @@ class AuthRepository @Inject constructor(
     val currentUser: com.google.firebase.auth.FirebaseUser? get() = auth.currentUser
 
     fun getGoogleSignInClient(): GoogleSignInClient {
+        // We use R.string.default_web_client_id which is automatically generated 
+        // by the Google Services plugin from your google-services.json file.
+        val webClientId = try {
+            context.getString(R.string.default_web_client_id)
+        } catch (e: Exception) {
+            // Fallback if the resource is not found (usually means google-services.json is missing or not synced)
+            ""
+        }
+
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("988357798428-c82f8as8qc822r0tedov6drntg88fbau.apps.googleusercontent.com") // User needs to replace this
+            .requestIdToken(webClientId)
             .requestEmail()
+            .requestProfile()
             .build()
         return GoogleSignIn.getClient(context, gso)
     }
@@ -36,19 +47,27 @@ class AuthRepository @Inject constructor(
             val firebaseUser = authResult.user
             
             if (firebaseUser != null) {
-                val user = User(
-                    uid = firebaseUser.uid,
-                    name = firebaseUser.displayName ?: "",
-                    email = firebaseUser.email ?: ""
-                )
-                // Check if user exists in Firestore, if not create
+                // Check if user exists in Firestore
                 val userDoc = firestore.collection("users").document(firebaseUser.uid).get().await()
-                if (!userDoc.exists()) {
-                    firestore.collection("users").document(firebaseUser.uid).set(user).await()
+                
+                val user = if (userDoc.exists()) {
+                    userDoc.toObject(User::class.java) ?: User(
+                        uid = firebaseUser.uid,
+                        name = firebaseUser.displayName ?: "",
+                        email = firebaseUser.email ?: ""
+                    )
+                } else {
+                    val newUser = User(
+                        uid = firebaseUser.uid,
+                        name = firebaseUser.displayName ?: "",
+                        email = firebaseUser.email ?: ""
+                    )
+                    firestore.collection("users").document(firebaseUser.uid).set(newUser).await()
+                    newUser
                 }
                 Result.success(user)
             } else {
-                Result.failure(Exception("Authentication failed"))
+                Result.failure(Exception("Authentication failed: User is null"))
             }
         } catch (e: Exception) {
             Result.failure(e)
