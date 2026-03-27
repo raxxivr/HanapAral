@@ -5,4 +5,5 @@ sealed class Screen(val route: String) {
     object Profile : Screen("profile")
     object GroupList : Screen("group_list")
     object CreateGroup : Screen("create_group")
+    object Admin : Screen("admin")
 }
