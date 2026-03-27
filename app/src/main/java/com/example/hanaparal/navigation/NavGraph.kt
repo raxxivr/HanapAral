@@ -16,6 +16,8 @@ import com.example.hanaparal.groups.GroupListScreen
 import com.example.hanaparal.profile.ProfileScreen
 import com.example.hanaparal.ui.admin.AdminScreen
 import com.example.hanaparal.viewmodel.RemoteConfigViewModel
+import com.example.hanaparal.groups.CreateGroupScreen
+import com.example.hanaparal.groups.GroupListScreen
 
 @Composable
 fun SetupNavGraph(

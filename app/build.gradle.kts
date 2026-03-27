@@ -8,12 +8,13 @@ plugins {
 
 android {
     namespace = "com.example.hanaparal"
-    compileSdk = 34
+    // Updated to 36 as required by newer dependencies
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.hanaparal"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
