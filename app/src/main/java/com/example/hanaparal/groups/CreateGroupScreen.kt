@@ -1,5 +1,6 @@
 package com.example.hanaparal.groups
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -81,8 +82,44 @@ fun CreateGroupScreen(
             Button(
                 onClick = { /* TODO: Save to Firestore */ },
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Create Group")
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (isLoading) {
+                CircularProgressIndicator()
+            } else {
+                Button(
+                    onClick = {
+                        val userId = auth.currentUser?.uid
+                        if (userId != null && name.isNotBlank() && subject.isNotBlank()) {
+                            isLoading = true
+                            val newGroupRef = db.collection("groups").document()
+                            val newGroup = StudyGroup(
+                                id = newGroupRef.id,
+                                name = name,
+                                description = description,
+                                subject = subject,
+                                creatorId = userId,
+                                members = listOf(userId)
+                            )
+                            newGroupRef.set(newGroup)
+                                .addOnSuccessListener {
+                                    isLoading = false
+                                    Toast.makeText(context, "Group Created!", Toast.LENGTH_SHORT).show()
+                                    onBack() // Go back after success
+                                }
+                                .addOnFailureListener {
+                                    isLoading = false
+                                    Toast.makeText(context, "Failed: ${it.message}", Toast.LENGTH_SHORT).show()
+                                }
+                        } else {
+                            Toast.makeText(context, "Please fill in all required fields", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Create Group")
+                }
             }
         }
     }

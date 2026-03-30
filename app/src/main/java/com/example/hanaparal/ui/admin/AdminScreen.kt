@@ -27,10 +27,7 @@ fun AdminScreen(
     val activity = context as? FragmentActivity
     val config by remoteConfigViewModel.config.collectAsState()
     val isAuthenticated by remoteConfigViewModel.isSuperuserAuthenticated.collectAsState()
-    val showAuthDialog by remoteConfigViewModel.showAuthDialog.collectAsState()
     
-    val scope = rememberCoroutineScope()
-
     // Trigger biometric authentication on entry
     LaunchedEffect(Unit) {
         if (!isAuthenticated && activity != null) {
