@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
-import com.example.hanaparal.admin.BiometricAuthManager
+import com.example.hanaparal.auth.BiometricAuthManager
 import com.example.hanaparal.viewmodel.RemoteConfigViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
