@@ -1,5 +1,11 @@
 package com.example.hanaparal.profile
 
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -26,10 +32,18 @@ import com.google.firebase.firestore.FirebaseFirestore
 private val PrimaryBlue = Color(0xFF1565C0)
 private val BackgroundGray = Color(0xFFF8F9FA)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     isAdminPanelEnabled: Boolean = false,
+    onAdminClick: () -> Unit,
+    onNavigateToGroups: () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(text = "Profile Screen", style = MaterialTheme.typography.headlineMedium)
     onAdminClick: () -> Unit = {},
     onNavigateToGroups: () -> Unit = {}
 ) {
@@ -96,17 +110,10 @@ fun ProfileScreen(
             email = email.trim()
         )
 
-        db.collection("users").document(uid).set(userData)
-            .addOnSuccessListener {
-                isSaving = false
-                message = "Profile saved successfully!"
-            }
-            .addOnFailureListener { e ->
-                isSaving = false
-                message = "Failed: ${e.message}"
-            }
-    }
+            Spacer(modifier = Modifier.height(24.dp))
 
+            Button(onClick = onNavigateToGroups) {
+                Text(text = "Browse Groups")
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = BackgroundGray,
@@ -140,38 +147,16 @@ fun ProfileScreen(
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = PrimaryBlue)
             }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                // Modern Gradient Header
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(PrimaryBlue, BackgroundGray)
-                            )
-                        )
-                        .padding(vertical = 32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    ProfileHeader(name)
-                }
 
-                // Main Content Card
-                Card(
-                    modifier = Modifier
-                        .padding(horizontal = 20.dp)
-                        .offset(y = (-20).dp)
-                        .fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            if (isAdminPanelEnabled) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onAdminClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
                 ) {
+                    Text(text = "Admin Panel")
                     Column(
                         modifier = Modifier.padding(24.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -208,38 +193,10 @@ fun ProfileScreen(
                     }
                 }
             }
-        }
-    }
-}
 
-@Composable
-fun ProfileHeader(name: String) {
-    val initials = if (name.isNotBlank()) name.take(2).uppercase() else "?"
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            modifier = Modifier
-                .size(90.dp)
-                .clip(CircleShape)
-                .background(Color.White)
-                .padding(3.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape)
-                    .background(PrimaryBlue),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(initials, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-            }
+            Spacer(modifier = Modifier.height(32.dp))
+            Text(text = "Member 2: Add Profile Details Here", style = MaterialTheme.typography.bodySmall)
         }
-        Spacer(Modifier.height(10.dp))
-        Text(
-            text = if (name.isNotBlank()) name else "Student",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
-        )
     }
 }
 

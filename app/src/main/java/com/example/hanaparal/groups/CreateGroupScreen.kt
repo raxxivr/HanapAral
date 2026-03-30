@@ -5,14 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.hanaparal.models.StudyGroup
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,19 +16,10 @@ fun CreateGroupScreen(
     maxMembers: Int = 10,
     onBack: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var subject by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-
-    val context = LocalContext.current
-    val auth = FirebaseAuth.getInstance()
-    val db = FirebaseFirestore.getInstance()
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Create Study Group") },
+                title = { Text("Create New Group") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -46,36 +33,54 @@ fun CreateGroupScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Maximum members allowed: $maxMembers",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.secondary
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Group Member Limit: ",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "$maxMembers members",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Member 3: Implement the rest of the form fields here
             OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
+                value = "",
+                onValueChange = {},
                 label = { Text("Group Name") },
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(8.dp))
-
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
             OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
+                value = "",
+                onValueChange = {},
                 label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3
             )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = subject,
-                onValueChange = { subject = it },
-                label = { Text("Subject") },
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Button(
+                onClick = { /* TODO: Save to Firestore */ },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(24.dp))
