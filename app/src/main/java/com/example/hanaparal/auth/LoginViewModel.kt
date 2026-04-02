@@ -1,5 +1,6 @@
 package com.example.hanaparal.auth
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hanaparal.models.User
@@ -25,16 +26,22 @@ class LoginViewModel @Inject constructor(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    fun signInWithGoogle(idToken: String) {
+    fun signInWithGoogle(context: Context) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            val result = repository.firebaseAuthWithGoogle(idToken)
-            _authState.value = result.fold(
-                onSuccess = { AuthState.Success(it) },
-                onFailure = { AuthState.Error(it.message ?: "Unknown error") }
+            val signInResult = repository.signInWithGoogle(context)
+            signInResult.fold(
+                onSuccess = { idToken ->
+                    val firebaseResult = repository.firebaseAuthWithGoogle(idToken)
+                    _authState.value = firebaseResult.fold(
+                        onSuccess = { AuthState.Success(it) },
+                        onFailure = { AuthState.Error(it.message ?: "Firebase Auth failed") }
+                    )
+                },
+                onFailure = { 
+                    _authState.value = AuthState.Error(it.message ?: "Google Sign-In failed") 
+                }
             )
         }
     }
-    
-    fun getGoogleSignInClient() = repository.getGoogleSignInClient()
 }

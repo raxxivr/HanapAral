@@ -2,23 +2,25 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt)
-    id("kotlin-kapt")  // Use id() instead of alias for kapt
 }
 
 android {
     namespace = "com.example.hanaparal"
-    // Updated to 36 as required by newer dependencies
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.hanaparal"
+        applicationId = "com.example.hanaparal.app"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
     }
 
     buildTypes {
@@ -35,18 +37,19 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
     kotlinOptions {
         jvmTarget = "11"
     }
-
     buildFeatures {
         compose = true
-        buildConfig = true
     }
-
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"  // Keep this
+        kotlinCompilerExtensionVersion = "1.5.8"
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 }
 
@@ -75,8 +78,14 @@ dependencies {
     implementation(libs.firebase.config)
     implementation(libs.firebase.analytics)
 
-    // Google Auth
+    // Auth & Credentials
     implementation(libs.play.services.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+
+    // ViewModel Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -85,8 +94,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-}
-
-kapt {
-    correctErrorTypes = true
 }
