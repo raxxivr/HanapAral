@@ -2,13 +2,20 @@ package com.example.hanaparal.groups
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.hanaparal.models.StudyGroup
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -16,6 +23,15 @@ fun CreateGroupScreen(
     maxMembers: Int = 10,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+
+    var name by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var subject by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -32,7 +48,8 @@ fun CreateGroupScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Card(
@@ -52,26 +69,36 @@ fun CreateGroupScreen(
                     Text(
                         text = "$maxMembers members",
                         style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Member 3: Implement the rest of the form fields here
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = name,
+                onValueChange = { name = it },
                 label = { Text("Group Name") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = subject,
+                onValueChange = { subject = it },
+                label = { Text("Subject") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
             
             Spacer(modifier = Modifier.height(16.dp))
             
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = description,
+                onValueChange = { description = it },
                 label = { Text("Description") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3
@@ -79,12 +106,6 @@ fun CreateGroupScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
             
-            Button(
-                onClick = { /* TODO: Save to Firestore */ },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-
             if (isLoading) {
                 CircularProgressIndicator()
             } else {
@@ -106,7 +127,7 @@ fun CreateGroupScreen(
                                 .addOnSuccessListener {
                                     isLoading = false
                                     Toast.makeText(context, "Group Created!", Toast.LENGTH_SHORT).show()
-                                    onBack() // Go back after success
+                                    onBack()
                                 }
                                 .addOnFailureListener {
                                     isLoading = false

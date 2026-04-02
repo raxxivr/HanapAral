@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">HanapAral</string>
+    <!-- Replace with your actual web client ID from google-services.json -->
+    <string name="default_web_client_id">YOUR_WEB_CLIENT_ID_HERE</string>
 </resources>

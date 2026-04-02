@@ -1,13 +1,22 @@
 package com.example.hanaparal.groups
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.hanaparal.models.StudyGroup
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun GroupListScreen(
@@ -27,11 +36,14 @@ fun GroupListScreen(
         db.collection("groups")
             .get()
             .addOnSuccessListener { result ->
-                groups = result.toObjects(StudyGroup::class.java)
+                groups = result.documents.mapNotNull { doc ->
+                    doc.toObject(StudyGroup::class.java)?.copy(id = doc.id)
+                }
                 isLoading = false
             }
             .addOnFailureListener {
                 isLoading = false
+                Toast.makeText(context, "Failed to load groups", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -61,7 +73,7 @@ fun GroupListScreen(
                 color = MaterialTheme.colorScheme.secondary
             )
             
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
             if (!isGroupCreationEnabled) {
                 Card(
@@ -79,48 +91,47 @@ fun GroupListScreen(
                 }
             }
             
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Text(text = "List of groups will appear here...")
-        if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item {
-                    Text(text = "Available Study Groups", style = MaterialTheme.typography.headlineMedium)
-                    Spacer(modifier = Modifier.height(16.dp))
+            if (isLoading) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
-                items(groups) { group ->
-                    GroupItem(
-                        group = group,
-                        currentUserId = currentUserId,
-                        maxMembers = maxMembersPerGroup,
-                        onJoinClick = {
-                            if (currentUserId != null) {
-                                if (group.members.size >= maxMembersPerGroup) {
-                                    Toast.makeText(context, "Group is full!", Toast.LENGTH_SHORT).show()
-                                    return@GroupItem
-                                }
-                                
-                                db.collection("groups").document(group.id)
-                                    .update("members", FieldValue.arrayUnion(currentUserId))
-                                    .addOnSuccessListener {
-                                        Toast.makeText(context, "Joined ${group.name}", Toast.LENGTH_SHORT).show()
-                                        // Refresh groups or update local state
-                                        groups = groups.map {
-                                            if (it.id == group.id) it.copy(members = it.members + currentUserId) else it
-                                        }
+            } else if (groups.isEmpty()) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    Text(text = "No study groups available.")
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    items(groups) { group ->
+                        GroupItem(
+                            group = group,
+                            currentUserId = currentUserId,
+                            maxMembers = maxMembersPerGroup,
+                            onJoinClick = {
+                                if (currentUserId != null) {
+                                    if (group.members.size >= maxMembersPerGroup) {
+                                        Toast.makeText(context, "Group is full!", Toast.LENGTH_SHORT).show()
+                                        return@GroupItem
                                     }
+                                    
+                                    db.collection("groups").document(group.id)
+                                        .update("members", FieldValue.arrayUnion(currentUserId))
+                                        .addOnSuccessListener {
+                                            Toast.makeText(context, "Joined ${group.name}", Toast.LENGTH_SHORT).show()
+                                            groups = groups.map {
+                                                if (it.id == group.id) it.copy(members = it.members + currentUserId) else it
+                                            }
+                                        }
+                                        .addOnFailureListener {
+                                            Toast.makeText(context, "Failed to join group", Toast.LENGTH_SHORT).show()
+                                        }
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -163,7 +174,11 @@ fun GroupItem(
                         Text(if (isFull) "Full" else "Join")
                     }
                 } else {
-                    Text(text = "Joined", color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    Text(
+                        text = "Joined", 
+                        color = MaterialTheme.colorScheme.primary, 
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
