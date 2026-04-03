@@ -16,12 +16,11 @@ import com.google.firebase.messaging.RemoteMessage
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        // Handle both data and notification payloads
+        // In foreground, we MUST manually create the notification
         remoteMessage.notification?.let {
             showNotification(it.title ?: "HanapAral Update", it.body ?: "")
         }
 
-        // If you send data payloads, you can handle them here
         if (remoteMessage.data.isNotEmpty()) {
             val title = remoteMessage.data["title"] ?: "HanapAral Update"
             val message = remoteMessage.data["message"] ?: ""
@@ -31,8 +30,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         Log.d("FCM", "Refreshed token: $token")
-        // Ideally, you would save this token to Firestore under the user's profile
-        // so you can send targeted notifications to this specific user.
     }
 
     private fun showNotification(title: String, message: String) {
@@ -43,9 +40,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             val channel = NotificationChannel(
                 channelId,
                 "Study Group Alerts",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_HIGH // Changed to HIGH for pop-up
             ).apply {
                 description = "Notifications for group updates and reminders"
+                enableLights(true)
+                enableVibration(true)
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -60,12 +59,13 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         )
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.mipmap.ic_launcher) // Using default launcher icon for now
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(message)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH) // Changed to HIGH for pop-up
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
 
         notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
     }
