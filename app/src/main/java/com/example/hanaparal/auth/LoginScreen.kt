@@ -17,14 +17,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel(),
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: (isNewUser: Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val authState by viewModel.authState.collectAsState()
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
-            onLoginSuccess()
+            val successState = authState as AuthState.Success
+            onLoginSuccess(successState.isNewUser)
         } else if (authState is AuthState.Error) {
             Toast.makeText(context, (authState as AuthState.Error).message, Toast.LENGTH_SHORT).show()
         }

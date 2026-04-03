@@ -14,7 +14,7 @@ import javax.inject.Inject
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
-    data class Success(val user: User) : AuthState()
+    data class Success(val user: User, val isNewUser: Boolean) : AuthState()
     data class Error(val message: String) : AuthState()
 }
 
@@ -34,7 +34,11 @@ class LoginViewModel @Inject constructor(
                 onSuccess = { idToken ->
                     val firebaseResult = repository.firebaseAuthWithGoogle(idToken)
                     _authState.value = firebaseResult.fold(
-                        onSuccess = { AuthState.Success(it) },
+                        onSuccess = { user -> 
+                            // Check if profile is complete (has course and year)
+                            val isNewUser = user.course.isBlank() || user.year.isBlank()
+                            AuthState.Success(user, isNewUser) 
+                        },
                         onFailure = { AuthState.Error(it.message ?: "Firebase Auth failed") }
                     )
                 },

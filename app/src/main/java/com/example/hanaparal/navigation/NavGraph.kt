@@ -13,6 +13,7 @@ import com.example.hanaparal.auth.LoginScreen
 import com.example.hanaparal.groups.CreateGroupScreen
 import com.example.hanaparal.groups.GroupListScreen
 import com.example.hanaparal.profile.ProfileScreen
+import com.example.hanaparal.profile.ProfileSetupScreen
 import com.example.hanaparal.ui.admin.AdminScreen
 import com.example.hanaparal.viewmodel.RemoteConfigViewModel
 
@@ -31,9 +32,25 @@ fun SetupNavGraph(
     ) {
         composable(route = Screen.Login.route) {
             LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Screen.Profile.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                onLoginSuccess = { isNewUser ->
+                    if (isNewUser) {
+                        navController.navigate(Screen.ProfileSetup.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Screen.GroupList.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    }
+                }
+            )
+        }
+
+        composable(route = Screen.ProfileSetup.route) {
+            ProfileSetupScreen(
+                onSetupComplete = {
+                    navController.navigate(Screen.GroupList.route) {
+                        popUpTo(Screen.ProfileSetup.route) { inclusive = true }
                     }
                 }
             )
@@ -43,7 +60,12 @@ fun SetupNavGraph(
             ProfileScreen(
                 isAdminPanelEnabled = config.isAdminPanelEnabled,
                 onAdminClick = { navController.navigate(Screen.Admin.route) },
-                onNavigateToGroups = { navController.navigate(Screen.GroupList.route) }
+                onNavigateToGroups = { navController.navigate(Screen.GroupList.route) },
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -61,6 +83,9 @@ fun SetupNavGraph(
                 maxMembersPerGroup = config.maxMembersPerGroup,
                 onCreateGroupClick = {
                     navController.navigate(Screen.CreateGroup.route)
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.Profile.route)
                 }
             )
         }

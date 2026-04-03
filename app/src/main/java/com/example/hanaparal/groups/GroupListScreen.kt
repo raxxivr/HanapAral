@@ -1,28 +1,38 @@
 package com.example.hanaparal.groups
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.hanaparal.models.StudyGroup
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 
+private val PrimaryBlue = Color(0xFF1565C0)
+private val BackgroundGray = Color(0xFFF8F9FA)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupListScreen(
     isGroupCreationEnabled: Boolean = true,
     maxMembersPerGroup: Int = 10,
-    onCreateGroupClick: () -> Unit
+    onCreateGroupClick: () -> Unit,
+    onProfileClick: () -> Unit
 ) {
     val db = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
@@ -48,9 +58,28 @@ fun GroupListScreen(
     }
 
     Scaffold(
+        containerColor = BackgroundGray,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("STUDY GROUPS", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = PrimaryBlue,
+                    titleContentColor = Color.White
+                ),
+                actions = {
+                    IconButton(onClick = onProfileClick) {
+                        Icon(Icons.Default.Person, contentDescription = "Profile", tint = Color.White)
+                    }
+                }
+            )
+        },
         floatingActionButton = {
             if (isGroupCreationEnabled) {
-                FloatingActionButton(onClick = onCreateGroupClick) {
+                FloatingActionButton(
+                    onClick = onCreateGroupClick,
+                    containerColor = PrimaryBlue,
+                    contentColor = Color.White
+                ) {
                     Icon(Icons.Default.Add, contentDescription = "Create Group")
                 }
             }
@@ -60,18 +89,36 @@ fun GroupListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Study Groups", style = MaterialTheme.typography.headlineMedium)
+            Spacer(modifier = Modifier.height(16.dp))
             
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "Max members per group: $maxMembersPerGroup",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.secondary
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Group Settings",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryBlue
+                        )
+                        Text(
+                            text = "Max members: $maxMembersPerGroup",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            }
             
             Spacer(modifier = Modifier.height(16.dp))
             
@@ -84,7 +131,7 @@ fun GroupListScreen(
                 ) {
                     Text(
                         text = "Group creation is currently disabled by admin.",
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(12.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
@@ -92,18 +139,21 @@ fun GroupListScreen(
             }
             
             if (isLoading) {
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = PrimaryBlue)
                 }
             } else if (groups.isEmpty()) {
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    Text(text = "No study groups available.")
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = "No study groups available.", color = Color.Gray)
+                        Text(text = "Be the first to create one!", color = Color.Gray)
+                    }
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
                     items(groups) { group ->
                         GroupItem(
@@ -150,35 +200,75 @@ fun GroupItem(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = group.name, style = MaterialTheme.typography.titleLarge)
-            Text(text = "Subject: ${group.subject}", style = MaterialTheme.typography.bodyMedium)
-            Text(text = group.description, style = MaterialTheme.typography.bodySmall)
-            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Members: ${group.members.size} / $maxMembers",
-                    color = if (isFull) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                    text = group.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryBlue
                 )
-                if (!isMember) {
-                    Button(
-                        onClick = onJoinClick,
-                        enabled = !isFull
-                    ) {
-                        Text(if (isFull) "Full" else "Join")
-                    }
-                } else {
+                Surface(
+                    color = if (isFull) Color(0xFFFFEBEE) else Color(0xFFE8F5E9),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
                     Text(
-                        text = "Joined", 
-                        color = MaterialTheme.colorScheme.primary, 
+                        text = "${group.members.size} / $maxMembers",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isFull) Color(0xFFC62828) else Color(0xFF2E7D32),
                         fontWeight = FontWeight.Bold
                     )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = group.subject,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = Color.DarkGray
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = group.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                maxLines = 2
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            if (!isMember) {
+                Button(
+                    onClick = onJoinClick,
+                    enabled = !isFull,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryBlue,
+                        disabledContainerColor = Color.LightGray
+                    )
+                ) {
+                    Text(if (isFull) "GROUP FULL" else "JOIN GROUP", fontWeight = FontWeight.Bold)
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { /* Already joined */ },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    enabled = false,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryBlue)
+                ) {
+                    Text("ALREADY JOINED", fontWeight = FontWeight.Bold)
                 }
             }
         }
