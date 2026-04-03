@@ -1,7 +1,6 @@
 package com.example.hanaparal.groups
 
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,7 +8,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +42,7 @@ fun GroupListScreen(
 
     var groups by remember { mutableStateOf<List<StudyGroup>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         db.collection("groups")
@@ -57,29 +59,75 @@ fun GroupListScreen(
             }
     }
 
+    val filteredGroups = when (selectedTab) {
+        0 -> groups // Available Groups
+        1 -> groups.filter { it.members.contains(currentUserId) } // My Groups
+        else -> groups
+    }
+
     Scaffold(
         containerColor = BackgroundGray,
         topBar = {
-            TopAppBar(
-                title = { 
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text("STUDY GROUPS", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+            Column {
+                TopAppBar(
+                    title = {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Text("STUDY GROUPS", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = PrimaryBlue,
+                        titleContentColor = Color.White
+                    ),
+                    actions = {
+                        IconButton(onClick = onProfileClick) {
+                            Icon(Icons.Default.Person, contentDescription = "Profile", tint = Color.White)
+                        }
+                    },
+                    navigationIcon = {
+                        Spacer(modifier = Modifier.width(48.dp))
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryBlue,
-                    titleContentColor = Color.White
-                ),
-                actions = {
-                    IconButton(onClick = onProfileClick) {
-                        Icon(Icons.Default.Person, contentDescription = "Profile", tint = Color.White)
+                )
+                TabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = Color.White,
+                    contentColor = PrimaryBlue,
+                    divider = {
+                        HorizontalDivider(color = Color.LightGray, thickness = 1.dp)
+                    },
+                    indicator = { tabPositions ->
+                        if (selectedTab < tabPositions.size) {
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                color = PrimaryBlue
+                            )
+                        }
                     }
-                },
-                // Adding an empty navigation icon to balance the center alignment
-                navigationIcon = {
-                    Spacer(modifier = Modifier.width(48.dp))
+                ) {
+                    Tab(
+                        selected = selectedTab == 0,
+                        onClick = { selectedTab = 0 },
+                        text = { 
+                            Text(
+                                "Available", 
+                                fontWeight = FontWeight.Bold,
+                                color = if (selectedTab == 0) PrimaryBlue else Color.Gray
+                            ) 
+                        }
+                    )
+                    Tab(
+                        selected = selectedTab == 1,
+                        onClick = { selectedTab = 1 },
+                        text = { 
+                            Text(
+                                "My Groups", 
+                                fontWeight = FontWeight.Bold,
+                                color = if (selectedTab == 1) PrimaryBlue else Color.Gray
+                            ) 
+                        }
+                    )
                 }
-            )
+            }
         },
         floatingActionButton = {
             if (isGroupCreationEnabled) {
@@ -102,35 +150,7 @@ fun GroupListScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
             
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Group Settings",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryBlue
-                        )
-                        Text(
-                            text = "Max members: $maxMembersPerGroup",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
-                        )
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            if (!isGroupCreationEnabled) {
+            if (!isGroupCreationEnabled && selectedTab == 0) {
                 Card(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer
@@ -147,23 +167,25 @@ fun GroupListScreen(
             }
             
             if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = PrimaryBlue)
                 }
-            } else if (groups.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            } else if (filteredGroups.isEmpty()) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = "No study groups available.", color = Color.Gray)
-                        Text(text = "Be the first to create one!", color = Color.Gray)
+                        Text(
+                            text = if (selectedTab == 0) "No study groups available." else "You haven't joined any groups yet.",
+                            color = Color.Gray
+                        )
                     }
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
-                    items(groups) { group ->
+                    items(filteredGroups) { group ->
                         GroupItem(
                             group = group,
                             currentUserId = currentUserId,
@@ -203,8 +225,23 @@ fun GroupItem(
     maxMembers: Int,
     onJoinClick: () -> Unit
 ) {
+    val db = FirebaseFirestore.getInstance()
+    var adminName by remember { mutableStateOf("Loading...") }
     val isMember = currentUserId != null && group.members.contains(currentUserId)
     val isFull = group.members.size >= maxMembers
+    val isCreator = group.creatorId == currentUserId
+
+    LaunchedEffect(group.creatorId) {
+        if (group.creatorId.isNotEmpty()) {
+            db.collection("users").document(group.creatorId).get()
+                .addOnSuccessListener { doc ->
+                    adminName = doc.getString("name") ?: "Unknown Admin"
+                }
+                .addOnFailureListener {
+                    adminName = "Unknown Admin"
+                }
+        }
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -218,12 +255,29 @@ fun GroupItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = group.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = group.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryBlue
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Star, 
+                            contentDescription = null, 
+                            tint = Color(0xFFFFA000),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = "Admin: $adminName",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
                 Surface(
                     color = if (isFull) Color(0xFFFFEBEE) else Color(0xFFE8F5E9),
                     shape = RoundedCornerShape(8.dp)
@@ -238,14 +292,14 @@ fun GroupItem(
                 }
             }
             
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = group.subject,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
                 color = Color.DarkGray
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = group.description,
                 style = MaterialTheme.typography.bodySmall,
@@ -274,9 +328,12 @@ fun GroupItem(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     enabled = false,
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryBlue)
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (isCreator) Color(0xFFFFA000) else PrimaryBlue,
+                        disabledContentColor = if (isCreator) Color(0xFFFFA000) else PrimaryBlue
+                    )
                 ) {
-                    Text("ALREADY JOINED", fontWeight = FontWeight.Bold)
+                    Text(if (isCreator) "YOU ARE THE ADMIN" else "ALREADY JOINED", fontWeight = FontWeight.Bold)
                 }
             }
         }
