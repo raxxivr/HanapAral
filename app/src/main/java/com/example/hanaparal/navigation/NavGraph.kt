@@ -60,7 +60,7 @@ fun SetupNavGraph(
             ProfileScreen(
                 isAdminPanelEnabled = config.isAdminPanelEnabled,
                 onAdminClick = { navController.navigate(Screen.Admin.route) },
-                onNavigateToGroups = { navController.navigate(Screen.GroupList.route) },
+                onNavigateBack = { navController.popBackStack() },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }

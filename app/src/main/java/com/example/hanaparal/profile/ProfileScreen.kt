@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,7 +31,7 @@ private val BackgroundGray = Color(0xFFF8F9FA)
 fun ProfileScreen(
     isAdminPanelEnabled: Boolean = false,
     onAdminClick: () -> Unit = {},
-    onNavigateToGroups: () -> Unit = {},
+    onNavigateBack: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val auth = FirebaseAuth.getInstance()
@@ -45,7 +46,6 @@ fun ProfileScreen(
     var isLoading by remember { mutableStateOf(true) }
     var isSaving by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(user?.uid) {
         user?.uid?.let { uid ->
@@ -74,6 +74,15 @@ fun ProfileScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("MY PROFILE", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = PrimaryBlue,
                     titleContentColor = Color.White
@@ -85,15 +94,6 @@ fun ProfileScreen(
                         }
                     }
                 }
-            )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onNavigateToGroups,
-                containerColor = PrimaryBlue,
-                contentColor = Color.White,
-                icon = { Icon(Icons.Default.Search, contentDescription = null) },
-                text = { Text("Find Groups") }
             )
         }
     ) { padding ->
@@ -157,7 +157,11 @@ fun ProfileScreen(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
                         ) {
-                            Text("Update Profile", fontWeight = FontWeight.Bold)
+                            if (isSaving) {
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            } else {
+                                Text("Update Profile", fontWeight = FontWeight.Bold)
+                            }
                         }
 
                         OutlinedButton(

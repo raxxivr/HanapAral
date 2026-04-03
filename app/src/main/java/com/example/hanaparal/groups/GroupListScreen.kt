@@ -60,9 +60,13 @@ fun GroupListScreen(
     Scaffold(
         containerColor = BackgroundGray,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("STUDY GROUPS", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            TopAppBar(
+                title = { 
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text("STUDY GROUPS", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = PrimaryBlue,
                     titleContentColor = Color.White
                 ),
@@ -70,6 +74,10 @@ fun GroupListScreen(
                     IconButton(onClick = onProfileClick) {
                         Icon(Icons.Default.Person, contentDescription = "Profile", tint = Color.White)
                     }
+                },
+                // Adding an empty navigation icon to balance the center alignment
+                navigationIcon = {
+                    Spacer(modifier = Modifier.width(48.dp))
                 }
             )
         },
