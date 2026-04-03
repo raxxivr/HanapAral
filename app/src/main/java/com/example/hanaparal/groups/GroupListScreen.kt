@@ -23,6 +23,7 @@ import com.example.hanaparal.models.StudyGroup
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 
 private val PrimaryBlue = Color(0xFF1565C0)
 private val BackgroundGray = Color(0xFFF8F9FA)
@@ -52,6 +53,13 @@ fun GroupListScreen(
                     doc.toObject(StudyGroup::class.java)?.copy(id = doc.id)
                 }
                 isLoading = false
+                
+                // Ensure users are subscribed to topics for groups they've already joined
+                groups.forEach { group ->
+                    if (group.members.contains(currentUserId)) {
+                        FirebaseMessaging.getInstance().subscribeToTopic("group_${group.id}")
+                    }
+                }
             }
             .addOnFailureListener {
                 isLoading = false
@@ -150,22 +158,6 @@ fun GroupListScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
             
-            if (!isGroupCreationEnabled && selectedTab == 0) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    ),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-                ) {
-                    Text(
-                        text = "Group creation is currently disabled by admin.",
-                        modifier = Modifier.padding(12.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                }
-            }
-            
             if (isLoading) {
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = PrimaryBlue)
@@ -200,6 +192,9 @@ fun GroupListScreen(
                                     db.collection("groups").document(group.id)
                                         .update("members", FieldValue.arrayUnion(currentUserId))
                                         .addOnSuccessListener {
+                                            // SUBSCRIBE TO GROUP TOPIC
+                                            FirebaseMessaging.getInstance().subscribeToTopic("group_${group.id}")
+                                            
                                             Toast.makeText(context, "Joined ${group.name}", Toast.LENGTH_SHORT).show()
                                             groups = groups.map {
                                                 if (it.id == group.id) it.copy(members = it.members + currentUserId) else it
