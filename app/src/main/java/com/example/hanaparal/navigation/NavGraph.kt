@@ -21,13 +21,14 @@ import com.example.hanaparal.viewmodel.RemoteConfigViewModel
 fun SetupNavGraph(
     navController: NavHostController,
     remoteConfigManager: RemoteConfigManager,
+    startDestination: String = Screen.Login.route,
     modifier: Modifier = Modifier
 ) {
     val config by remoteConfigManager.config.collectAsState()
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route,
+        startDestination = startDestination,
         modifier = modifier
     ) {
         composable(route = Screen.Login.route) {
