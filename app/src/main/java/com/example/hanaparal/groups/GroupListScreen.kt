@@ -47,38 +47,37 @@ fun GroupListScreen(
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var selectedGroupForDetail by remember { mutableStateOf<StudyGroup?>(null) }
 
-    val tabs = listOf("Available Groups", "My Groups")
-
     LaunchedEffect(Unit) {
-        // Using snapshot listener for real-time updates when joining
         db.collection("groups")
-            .get()
-            .addOnSuccessListener { result ->
-                groups = result.documents.mapNotNull { doc ->
-                    doc.toObject(StudyGroup::class.java)?.copy(id = doc.id)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    isLoading = false
+                    Toast.makeText(context, "Failed to load groups", Toast.LENGTH_SHORT).show()
+                    return@addSnapshotListener
                 }
-                isLoading = false
-                
-                // Ensure users are subscribed to topics for groups they've already joined
-                groups.forEach { group ->
-                    if (group.members.contains(currentUserId)) {
-                        FirebaseMessaging.getInstance().subscribeToTopic("group_${group.id}")
+
+                if (snapshot != null) {
+                    groups = snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(StudyGroup::class.java)?.copy(id = doc.id)
+                    }
+                    isLoading = false
+
+                    groups.forEach { group ->
+                        if (group.members.contains(currentUserId)) {
+                            FirebaseMessaging.getInstance().subscribeToTopic("group_${group.id}")
+                        }
                     }
                 }
-            }
-            .addOnFailureListener {
-                isLoading = false
-                Toast.makeText(context, "Failed to load groups", Toast.LENGTH_SHORT).show()
             }
     }
 
     val filteredGroups = remember(groups, selectedTabIndex, currentUserId) {
         if (selectedTabIndex == 0) {
-            // Available: Not a member
-            groups.filter { !it.members.contains(currentUserId) }
-        } else {
             // My Groups: Is a member
             groups.filter { it.members.contains(currentUserId) }
+        } else {
+            // Available: Not a member
+            groups.filter { !it.members.contains(currentUserId) }
         }
     }
 
@@ -106,40 +105,40 @@ fun GroupListScreen(
                     }
                 )
                 TabRow(
-                    selectedTabIndex = selectedTab,
+                    selectedTabIndex = selectedTabIndex,
                     containerColor = Color.White,
                     contentColor = PrimaryBlue,
                     divider = {
                         HorizontalDivider(color = Color.LightGray, thickness = 1.dp)
                     },
                     indicator = { tabPositions ->
-                        if (selectedTab < tabPositions.size) {
+                        if (selectedTabIndex < tabPositions.size) {
                             TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
                                 color = PrimaryBlue
                             )
                         }
                     }
                 ) {
                     Tab(
-                        selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
-                        text = { 
-                            Text(
-                                "Available", 
-                                fontWeight = FontWeight.Bold,
-                                color = if (selectedTab == 0) PrimaryBlue else Color.Gray
-                            ) 
-                        }
-                    )
-                    Tab(
-                        selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
+                        selected = selectedTabIndex == 0,
+                        onClick = { selectedTabIndex = 0 },
                         text = { 
                             Text(
                                 "My Groups", 
                                 fontWeight = FontWeight.Bold,
-                                color = if (selectedTab == 1) PrimaryBlue else Color.Gray
+                                color = if (selectedTabIndex == 0) PrimaryBlue else Color.Gray
+                            ) 
+                        }
+                    )
+                    Tab(
+                        selected = selectedTabIndex == 1,
+                        onClick = { selectedTabIndex = 1 },
+                        text = { 
+                            Text(
+                                "Available", 
+                                fontWeight = FontWeight.Bold,
+                                color = if (selectedTabIndex == 1) PrimaryBlue else Color.Gray
                             ) 
                         }
                     )
@@ -173,12 +172,10 @@ fun GroupListScreen(
                 }
             } else if (filteredGroups.isEmpty()) {
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = if (selectedTab == 0) "No study groups available." else "You haven't joined any groups yet.",
-                            color = Color.Gray
-                        )
-                    }
+                    Text(
+                        text = if (selectedTabIndex == 0) "You haven't joined any groups yet." else "No study groups available.",
+                        color = Color.Gray
+                    )
                 }
             } else {
                 LazyColumn(
@@ -190,52 +187,23 @@ fun GroupListScreen(
                         GroupItem(
                             group = group,
                             currentUserId = currentUserId,
-                            onCardClick = { selectedGroupForDetail = group },
-                            onJoinClick = {
-                                if (currentUserId != null) {
-                                    db.collection("groups").document(group.id)
-                                        .update("members", FieldValue.arrayUnion(currentUserId))
-                                        .addOnSuccessListener {
-                                            Toast.makeText(context, "Joined ${group.name}", Toast.LENGTH_SHORT).show()
-                                        }
-                                }
-                            }
-                        )
-                    }
-                    if (filteredGroups.isEmpty()) {
-                        item {
-                            Box(
-                                modifier = Modifier.fillParentMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = if (selectedTabIndex == 0) "No available groups" else "You haven't joined any groups yet",
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                            }
-                        }
                             maxMembers = maxMembersPerGroup,
+                            onCardClick = { selectedGroupForDetail = group },
                             onJoinClick = {
                                 if (currentUserId != null) {
                                     if (group.members.size >= maxMembersPerGroup) {
                                         Toast.makeText(context, "Group is full!", Toast.LENGTH_SHORT).show()
-                                        return@GroupItem
-                                    }
-                                    
-                                    db.collection("groups").document(group.id)
-                                        .update("members", FieldValue.arrayUnion(currentUserId))
-                                        .addOnSuccessListener {
-                                            // SUBSCRIBE TO GROUP TOPIC
-                                            FirebaseMessaging.getInstance().subscribeToTopic("group_${group.id}")
-                                            
-                                            Toast.makeText(context, "Joined ${group.name}", Toast.LENGTH_SHORT).show()
-                                            groups = groups.map {
-                                                if (it.id == group.id) it.copy(members = it.members + currentUserId) else it
+                                    } else {
+                                        db.collection("groups").document(group.id)
+                                            .update("members", FieldValue.arrayUnion(currentUserId))
+                                            .addOnSuccessListener {
+                                                FirebaseMessaging.getInstance().subscribeToTopic("group_${group.id}")
+                                                Toast.makeText(context, "Joined ${group.name}", Toast.LENGTH_SHORT).show()
                                             }
-                                        }
-                                        .addOnFailureListener {
-                                            Toast.makeText(context, "Failed to join group", Toast.LENGTH_SHORT).show()
-                                        }
+                                            .addOnFailureListener {
+                                                Toast.makeText(context, "Failed to join group", Toast.LENGTH_SHORT).show()
+                                            }
+                                    }
                                 }
                             }
                         )
@@ -245,7 +213,6 @@ fun GroupListScreen(
         }
     }
 
-    // Detail Dialog
     selectedGroupForDetail?.let { group ->
         AlertDialog(
             onDismissRequest = { selectedGroupForDetail = null },
@@ -257,10 +224,7 @@ fun GroupListScreen(
                     Text(text = "Description:", fontWeight = FontWeight.Bold)
                     Text(text = group.description)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Members: ${group.members.size}", fontWeight = FontWeight.Bold)
-                    group.members.forEach { memberId ->
-                        Text(text = "• $memberId", style = MaterialTheme.typography.bodySmall)
-                    }
+                    Text(text = "Members: ${group.members.size} / $maxMembersPerGroup", fontWeight = FontWeight.Bold)
                 }
             },
             confirmButton = {
@@ -276,12 +240,8 @@ fun GroupListScreen(
 fun GroupItem(
     group: StudyGroup,
     currentUserId: String?,
-    onCardClick: () -> Unit,
-    onJoinClick: () -> Unit
-) {
-    group: StudyGroup, 
-    currentUserId: String?, 
     maxMembers: Int,
+    onCardClick: () -> Unit,
     onJoinClick: () -> Unit
 ) {
     val db = FirebaseFirestore.getInstance()
@@ -306,13 +266,6 @@ fun GroupItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onCardClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = group.name, style = MaterialTheme.typography.titleLarge)
-            Text(text = "Subject: ${group.subject}", style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(8.dp))
-        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(16.dp)
@@ -345,11 +298,6 @@ fun GroupItem(
                             fontWeight = FontWeight.Bold
                         )
                     }
-                } else {
-                    AssistChip(
-                        onClick = { onCardClick() },
-                        label = { Text("Member") }
-                    )
                 }
                 Surface(
                     color = if (isFull) Color(0xFFFFEBEE) else Color(0xFFE8F5E9),
@@ -402,7 +350,6 @@ fun GroupItem(
                     shape = RoundedCornerShape(10.dp),
                     enabled = false,
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (isCreator) Color(0xFFFFA000) else PrimaryBlue,
                         disabledContentColor = if (isCreator) Color(0xFFFFA000) else PrimaryBlue
                     )
                 ) {
