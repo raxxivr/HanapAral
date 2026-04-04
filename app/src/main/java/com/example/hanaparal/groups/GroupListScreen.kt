@@ -1,6 +1,7 @@
 package com.example.hanaparal.groups
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -43,9 +44,13 @@ fun GroupListScreen(
 
     var groups by remember { mutableStateOf<List<StudyGroup>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var selectedGroupForDetail by remember { mutableStateOf<StudyGroup?>(null) }
+
+    val tabs = listOf("Available Groups", "My Groups")
 
     LaunchedEffect(Unit) {
+        // Using snapshot listener for real-time updates when joining
         db.collection("groups")
             .get()
             .addOnSuccessListener { result ->
@@ -67,10 +72,14 @@ fun GroupListScreen(
             }
     }
 
-    val filteredGroups = when (selectedTab) {
-        0 -> groups // Available Groups
-        1 -> groups.filter { it.members.contains(currentUserId) } // My Groups
-        else -> groups
+    val filteredGroups = remember(groups, selectedTabIndex, currentUserId) {
+        if (selectedTabIndex == 0) {
+            // Available: Not a member
+            groups.filter { !it.members.contains(currentUserId) }
+        } else {
+            // My Groups: Is a member
+            groups.filter { it.members.contains(currentUserId) }
+        }
     }
 
     Scaffold(
@@ -181,6 +190,30 @@ fun GroupListScreen(
                         GroupItem(
                             group = group,
                             currentUserId = currentUserId,
+                            onCardClick = { selectedGroupForDetail = group },
+                            onJoinClick = {
+                                if (currentUserId != null) {
+                                    db.collection("groups").document(group.id)
+                                        .update("members", FieldValue.arrayUnion(currentUserId))
+                                        .addOnSuccessListener {
+                                            Toast.makeText(context, "Joined ${group.name}", Toast.LENGTH_SHORT).show()
+                                        }
+                                }
+                            }
+                        )
+                    }
+                    if (filteredGroups.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier.fillParentMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (selectedTabIndex == 0) "No available groups" else "You haven't joined any groups yet",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        }
                             maxMembers = maxMembersPerGroup,
                             onJoinClick = {
                                 if (currentUserId != null) {
@@ -211,10 +244,41 @@ fun GroupListScreen(
             }
         }
     }
+
+    // Detail Dialog
+    selectedGroupForDetail?.let { group ->
+        AlertDialog(
+            onDismissRequest = { selectedGroupForDetail = null },
+            title = { Text(text = group.name, fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text(text = "Subject: ${group.subject}", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Description:", fontWeight = FontWeight.Bold)
+                    Text(text = group.description)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Members: ${group.members.size}", fontWeight = FontWeight.Bold)
+                    group.members.forEach { memberId ->
+                        Text(text = "• $memberId", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { selectedGroupForDetail = null }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
 }
 
 @Composable
 fun GroupItem(
+    group: StudyGroup,
+    currentUserId: String?,
+    onCardClick: () -> Unit,
+    onJoinClick: () -> Unit
+) {
     group: StudyGroup, 
     currentUserId: String?, 
     maxMembers: Int,
@@ -239,6 +303,15 @@ fun GroupItem(
     }
 
     Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCardClick() },
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = group.name, style = MaterialTheme.typography.titleLarge)
+            Text(text = "Subject: ${group.subject}", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(8.dp))
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -272,6 +345,11 @@ fun GroupItem(
                             fontWeight = FontWeight.Bold
                         )
                     }
+                } else {
+                    AssistChip(
+                        onClick = { onCardClick() },
+                        label = { Text("Member") }
+                    )
                 }
                 Surface(
                     color = if (isFull) Color(0xFFFFEBEE) else Color(0xFFE8F5E9),
