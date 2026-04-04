@@ -164,25 +164,6 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        Button(
-                            onClick = {
-                                isSaving = true
-                                val userData = User(user?.uid ?: "", name, email, course, year)
-                                db.collection("users").document(user?.uid ?: "").set(userData)
-                                    .addOnSuccessListener { isSaving = false }
-                                    .addOnFailureListener { isSaving = false }
-                            },
-                            modifier = Modifier.fillMaxWidth().height(54.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
-                        ) {
-                            if (isSaving) {
-                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                            } else {
-                                Text("Update Profile", fontWeight = FontWeight.Bold)
-                            }
-                        }
-
                         OutlinedButton(
                             onClick = {
                                 auth.signOut()
