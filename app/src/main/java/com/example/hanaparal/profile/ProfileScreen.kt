@@ -89,10 +89,28 @@ fun ProfileScreen(
                     titleContentColor = Color.White
                 ),
                 actions = {
-                    if (isAdminPanelEnabled) {
-                        IconButton(onClick = onAdminClick) {
-                            Icon(Icons.Default.Settings, contentDescription = "Admin", tint = Color.White)
+                    IconButton(onClick = {
+                        if (isEditing) {
+                            isSaving = true
+                            val userData = User(user?.uid ?: "", name, email, course, year)
+
+                            db.collection("users").document(user?.uid ?: "").set(userData)
+                                .addOnSuccessListener {
+                                    isSaving = false
+                                    isEditing = false
+                                }
+                                .addOnFailureListener {
+                                    isSaving = false
+                                }
+                        } else {
+                            isEditing = true
                         }
+                    }) {
+                        Icon(
+                            imageVector = if (isEditing) Icons.Default.Check else Icons.Default.Edit,
+                            contentDescription = "Edit",
+                            tint = Color.White
+                        )
                     }
                 }
             )
