@@ -153,9 +153,20 @@ fun ProfileScreen(
                 ) {
                     Column(
                         modifier = Modifier.padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         Text("Student Information", fontWeight = FontWeight.Bold, fontSize = 17.sp, color = PrimaryBlue)
+
+                        if (isEditing) {
+                            Text(
+                                text = "Editing Mode",
+                                color = Color(0xFFD32F2F),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        Divider(color = Color.LightGray, thickness = 1.dp)
 
                         ProfileTextField(name, { name = it }, "Full Name", Icons.Default.Person, isEditing)
                         ProfileTextField(course, { course = it }, "Course", Icons.Default.Edit, isEditing)
