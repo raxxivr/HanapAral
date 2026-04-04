@@ -133,7 +133,11 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .background(
                             brush = Brush.verticalGradient(
-                                colors = listOf(PrimaryBlue, BackgroundGray)
+                                colors = listOf(
+                                    PrimaryBlue,
+                                    PrimaryBlue.copy(alpha = 0.7f),
+                                    BackgroundGray
+                                )
                             )
                         )
                         .padding(vertical = 32.dp),
@@ -149,8 +153,7 @@ fun ProfileScreen(
                         .fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)                ) {
                     Column(
                         modifier = Modifier.padding(24.dp),
                         verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -212,9 +215,22 @@ fun ProfileHeader(name: String) {
 @Composable
 fun ProfileTextField(value: String, onChange: (String) -> Unit, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean = true) {
     OutlinedTextField(
-        value = value, onValueChange = onChange, label = { Text(label) },
-        leadingIcon = { Icon(icon, contentDescription = null, tint = PrimaryBlue) },
-        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true, enabled = enabled,
-        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryBlue, unfocusedBorderColor = Color.LightGray)
+        value = value,
+        onValueChange = onChange,
+        label = { Text(label) },
+        leadingIcon = {
+            Icon(icon, contentDescription = null, tint = PrimaryBlue)
+        },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        singleLine = true,
+        enabled = enabled,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = PrimaryBlue,
+            unfocusedBorderColor = Color(0xFFE0E0E0),
+            disabledBorderColor = Color(0xFFE0E0E0),
+            disabledTextColor = Color.Black,
+            disabledLabelColor = Color.Gray
+        )
     )
-}
+    }
