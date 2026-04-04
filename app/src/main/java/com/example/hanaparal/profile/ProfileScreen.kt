@@ -157,9 +157,9 @@ fun ProfileScreen(
                     ) {
                         Text("Student Information", fontWeight = FontWeight.Bold, fontSize = 17.sp, color = PrimaryBlue)
 
-                        ProfileTextField(name, { name = it }, "Full Name", Icons.Default.Person)
-                        ProfileTextField(course, { course = it }, "Course", Icons.Default.Edit)
-                        ProfileTextField(year, { year = it }, "Year Level", Icons.Default.Info)
+                        ProfileTextField(name, { name = it }, "Full Name", Icons.Default.Person, isEditing)
+                        ProfileTextField(course, { course = it }, "Course", Icons.Default.Edit, isEditing)
+                        ProfileTextField(year, { year = it }, "Year Level", Icons.Default.Info, isEditing)
                         ProfileTextField(email, { email = it }, "Email Address", Icons.Default.Email, false)
 
                         Spacer(modifier = Modifier.height(8.dp))
