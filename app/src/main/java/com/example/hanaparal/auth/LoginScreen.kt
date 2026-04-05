@@ -1,12 +1,11 @@
 package com.example.hanaparal.auth
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,14 +13,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.hanaparal.R
 
 private val PrimaryBlue = Color(0xFF1565C0)
-private val BackgroundGray = Color(0xFFF8F9FA)
 
 @Composable
 fun LoginScreen(
@@ -62,14 +62,13 @@ fun LoginScreen(
             Surface(
                 modifier = Modifier.size(110.dp),
                 shape = CircleShape,
-                color = Color.White.copy(alpha = 0.2f)
+                color = Color.White
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
+                    Image(
+                        painter = painterResource(id = R.drawable.logo),
                         contentDescription = "Logo",
-                        modifier = Modifier.size(70.dp),
-                        tint = Color.White
+                        modifier = Modifier.size(150.dp)
                     )
                 }
             }

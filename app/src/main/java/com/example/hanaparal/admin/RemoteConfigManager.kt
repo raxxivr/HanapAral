@@ -95,11 +95,11 @@ class RemoteConfigManager @Inject constructor() {
 
     suspend fun forceRefresh(): Boolean {
         return try {
-            val result = remoteConfig.fetchAndActivate().await()
-            if (result) {
-                updateConfigState()
-            }
-            result
+            // Use fetch(0) to bypass cache and force a refresh from the server
+            remoteConfig.fetch(0).await()
+            val result = remoteConfig.activate().await()
+            updateConfigState()
+            true
         } catch (e: Exception) {
             Log.e("RemoteConfig", "Force refresh failed", e)
             false

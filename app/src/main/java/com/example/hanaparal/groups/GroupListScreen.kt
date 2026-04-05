@@ -1,11 +1,13 @@
 package com.example.hanaparal.groups
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -19,11 +21,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.hanaparal.R
 import com.example.hanaparal.models.StudyGroup
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -89,8 +93,20 @@ fun GroupListScreen(
             Column {
                 TopAppBar(
                     title = {
-                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            Text("STUDY GROUPS", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                modifier = Modifier.size(40.dp),
+                                shape = CircleShape,
+                                color = Color.White
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.logo),
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(4.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("HanapAral", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -101,9 +117,6 @@ fun GroupListScreen(
                         IconButton(onClick = onProfileClick) {
                             Icon(Icons.Default.Person, contentDescription = "Profile", tint = Color.White)
                         }
-                    },
-                    navigationIcon = {
-                        Spacer(modifier = Modifier.width(48.dp))
                     }
                 )
                 TabRow(
@@ -274,7 +287,7 @@ fun GroupDetailDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Default.AccountBox, // Changed from Groups
+                        Icons.Default.AccountBox,
                         contentDescription = null,
                         tint = PrimaryBlue,
                         modifier = Modifier.size(32.dp)
@@ -293,7 +306,7 @@ fun GroupDetailDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                DetailItem(icon = Icons.Default.MenuBook, label = "Subject", value = group.subject) // Changed from Book
+                DetailItem(icon = Icons.Default.MenuBook, label = "Subject", value = group.subject)
                 Spacer(modifier = Modifier.height(16.dp))
                 DetailItem(icon = Icons.Default.Info, label = "Description", value = group.description)
                 Spacer(modifier = Modifier.height(16.dp))
