@@ -178,6 +178,19 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        if (isAdminPanelEnabled) {
+                            Button(
+                                onClick = onAdminClick,
+                                modifier = Modifier.fillMaxWidth().height(54.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                            ) {
+                                Icon(Icons.Default.Settings, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Admin Panel", fontWeight = FontWeight.Bold)
+                            }
+                        }
+
                         OutlinedButton(
                             onClick = {
                                 auth.signOut()
@@ -233,4 +246,4 @@ fun ProfileTextField(value: String, onChange: (String) -> Unit, label: String, i
             disabledLabelColor = Color.Gray
         )
     )
-    }
+}
