@@ -18,7 +18,6 @@ class RemoteConfigViewModel @Inject constructor(
     private val remoteConfigManager: RemoteConfigManager
 ) : ViewModel() {
 
-    // Fixed: Using remoteConfigManager.config directly
     val config: StateFlow<AppConfig> = remoteConfigManager.config
         .stateIn(
             scope = viewModelScope,
@@ -45,6 +44,10 @@ class RemoteConfigViewModel @Inject constructor(
         if (authenticated) {
             refreshConfig()
         }
+    }
+
+    fun updateConfig(newConfig: AppConfig) {
+        remoteConfigManager.updateLocalConfig(newConfig)
     }
 
     fun logoutSuperuser() {

@@ -1,21 +1,33 @@
 package com.example.hanaparal.ui.admin
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
+import com.example.hanaparal.admin.AppConfig
 import com.example.hanaparal.auth.BiometricAuthManager
 import com.example.hanaparal.viewmodel.RemoteConfigViewModel
+
+private val PrimaryBlue = Color(0xFF1565C0)
+private val BackgroundGray = Color(0xFFF8F9FA)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,11 +36,25 @@ fun AdminScreen(
     onBackPressed: () -> Unit
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val activity = context as? FragmentActivity
     val config by remoteConfigViewModel.config.collectAsState()
     val isAuthenticated by remoteConfigViewModel.isSuperuserAuthenticated.collectAsState()
     
-    // Trigger biometric authentication on entry
+    // Local state for editing before applying
+    var editIsGroupCreationEnabled by remember { mutableStateOf(config.isGroupCreationEnabled) }
+    var editAnnouncementHeader by remember { mutableStateOf(config.announcementHeader) }
+    var editMaxMembers by remember { mutableStateOf(config.maxMembersPerGroup.toString()) }
+    var editIsAdminPanelEnabled by remember { mutableStateOf(config.isAdminPanelEnabled) }
+
+    // Sync local state when config changes from Firebase
+    LaunchedEffect(config) {
+        editIsGroupCreationEnabled = config.isGroupCreationEnabled
+        editAnnouncementHeader = config.announcementHeader
+        editMaxMembers = config.maxMembersPerGroup.toString()
+        editIsAdminPanelEnabled = config.isAdminPanelEnabled
+    }
+
     LaunchedEffect(Unit) {
         if (!isAuthenticated && activity != null) {
             val authManager = BiometricAuthManager(activity)
@@ -39,96 +65,147 @@ fun AdminScreen(
                     onBackPressed()
                 }
             } else {
-                // For demo purposes, if biometrics are not available, we'll allow access 
-                // but in a real app you'd handle this more strictly.
                 remoteConfigViewModel.setSuperuserAuthenticated(true)
             }
         }
     }
 
     if (!isAuthenticated) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+        Box(modifier = Modifier.fillMaxSize().background(BackgroundGray), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = PrimaryBlue)
         }
     } else {
         Scaffold(
+            containerColor = BackgroundGray,
             topBar = {
-                TopAppBar(
-                    title = { Text("Admin Panel") },
-                    navigationIcon = {
-                        IconButton(onClick = onBackPressed) {
-                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
-                        }
-                    },
+                CenterAlignedTopAppBar(
+                    title = { Text("ADMIN PANEL", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp) },
                     actions = {
                         IconButton(onClick = { 
                             remoteConfigViewModel.logoutSuperuser()
                             onBackPressed()
                         }) {
-                            Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout")
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                                contentDescription = "Logout",
+                                tint = Color.White
+                            )
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = PrimaryBlue,
+                        titleContentColor = Color.White
+                    )
                 )
             }
         ) { padding ->
             Column(
                 modifier = Modifier
-                    .padding(padding)
-                    .padding(16.dp)
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "Firebase Remote Config",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Current live values from Firebase Console",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                AdminConfigCard(
-                    title = "Group Settings",
-                    items = listOf(
-                        "Creation Enabled" to config.isGroupCreationEnabled.toString(),
-                        "Max Members" to config.maxMembersPerGroup.toString()
-                    )
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                AdminConfigCard(
-                    title = "UI Settings",
-                    items = listOf(
-                        "Announcement" to config.announcementHeader,
-                        "Admin Panel Enabled" to config.isAdminPanelEnabled.toString()
-                    )
-                )
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Text(
-                    text = "Feature Toggles (Read-only)",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                ToggleItem("Enable Group Creation", config.isGroupCreationEnabled)
-                ToggleItem("Show Announcement Header", config.announcementHeader.isNotEmpty())
-                ToggleItem("Admin Panel Accessible", config.isAdminPanelEnabled)
-                
-                Spacer(modifier = Modifier.height(32.dp))
-                
-                Button(
-                    onClick = { remoteConfigViewModel.refreshConfig() },
-                    modifier = Modifier.fillMaxWidth()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    PrimaryBlue,
+                                    PrimaryBlue.copy(alpha = 0.7f),
+                                    BackgroundGray
+                                )
+                            )
+                        )
+                        .padding(vertical = 40.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("Force Fetch & Activate")
+                    // Header space without icon as requested
+                }
+
+                Card(
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp)
+                        .offset(y = (-20).dp)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        Text("Remote Configuration", fontWeight = FontWeight.Bold, fontSize = 17.sp, color = PrimaryBlue)
+                        
+                        HorizontalDivider(color = Color.LightGray, thickness = 1.dp)
+
+                        // Feature Toggles
+                        AdminToggleItem(
+                            label = "Enable Group Creation",
+                            checked = editIsGroupCreationEnabled,
+                            onCheckedChange = { editIsGroupCreationEnabled = it }
+                        )
+
+                        AdminToggleItem(
+                            label = "Admin Panel Visibility",
+                            checked = editIsAdminPanelEnabled,
+                            onCheckedChange = { editIsAdminPanelEnabled = it }
+                        )
+
+                        OutlinedTextField(
+                            value = editMaxMembers,
+                            onValueChange = { if (it.all { char -> char.isDigit() }) editMaxMembers = it },
+                            label = { Text("Max Members Per Group") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryBlue, focusedLabelColor = PrimaryBlue)
+                        )
+
+                        OutlinedTextField(
+                            value = editAnnouncementHeader,
+                            onValueChange = { editAnnouncementHeader = it },
+                            label = { Text("Announcement Header") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryBlue, focusedLabelColor = PrimaryBlue)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Button(
+                            onClick = {
+                                val newConfig = AppConfig(
+                                    isGroupCreationEnabled = editIsGroupCreationEnabled,
+                                    announcementHeader = editAnnouncementHeader,
+                                    maxMembersPerGroup = editMaxMembers.toIntOrNull() ?: 10,
+                                    isAdminPanelEnabled = editIsAdminPanelEnabled
+                                )
+                                remoteConfigViewModel.updateConfig(newConfig)
+                                focusManager.clearFocus()
+                            },
+                            modifier = Modifier.fillMaxWidth().height(54.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                        ) {
+                            Icon(Icons.Default.Save, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Apply Changes Locally", fontWeight = FontWeight.Bold)
+                        }
+
+                        OutlinedButton(
+                            onClick = { remoteConfigViewModel.refreshConfig() },
+                            modifier = Modifier.fillMaxWidth().height(54.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryBlue)
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Sync with Firebase Console", fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
         }
@@ -136,35 +213,17 @@ fun AdminScreen(
 }
 
 @Composable
-fun AdminConfigCard(title: String, items: List<Pair<String, String>>) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
-            items.forEach { (label, value) ->
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(text = label, style = MaterialTheme.typography.bodyMedium)
-                    Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ToggleItem(label: String, checked: Boolean) {
+fun AdminToggleItem(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label)
-        Switch(checked = checked, onCheckedChange = null, enabled = false)
+        Text(text = label, fontWeight = FontWeight.Medium)
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = PrimaryBlue)
+        )
     }
 }

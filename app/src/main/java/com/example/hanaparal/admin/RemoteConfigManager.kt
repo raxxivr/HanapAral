@@ -32,24 +32,6 @@ class RemoteConfigManager @Inject constructor() {
     private val _config = MutableStateFlow(AppConfig())
     val config: StateFlow<AppConfig> = _config.asStateFlow()
 
-    // Add this function to RemoteConfigManager class
-    fun forceEnableAdminPanel() {
-        // Force enable admin panel locally without Firebase
-        _config.value = _config.value.copy(isAdminPanelEnabled = true)
-        android.util.Log.d("RemoteConfig", "🔧 Admin Panel force enabled for testing")
-    }
-
-    fun forceDisableAdminPanel() {
-        // Force disable admin panel locally without Firebase
-        _config.value = _config.value.copy(isAdminPanelEnabled = false)
-        android.util.Log.d("RemoteConfig", "🔧 Admin Panel force disabled for testing")
-    }
-
-
-
-
-
-
     init {
         val configSettings = remoteConfigSettings {
             minimumFetchIntervalInSeconds = 3600 // 1 hour for production
@@ -66,6 +48,12 @@ class RemoteConfigManager @Inject constructor() {
 
         fetchAndActivate()
         setupRealTimeUpdates()
+    }
+
+    // Function for superusers to update config locally
+    fun updateLocalConfig(newConfig: AppConfig) {
+        _config.value = newConfig
+        Log.d("RemoteConfig", "Local config updated by superuser: $newConfig")
     }
 
     private fun fetchAndActivate() {

@@ -20,6 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 
+private val PrimaryBlue = Color(0xFF1565C0)
+private val BackgroundGray = Color(0xFFF8F9FA)
+
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel(),
@@ -37,15 +40,14 @@ fun LoginScreen(
         }
     }
 
-    // A beautiful background gradient
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.primaryContainer
+                        PrimaryBlue,
+                        PrimaryBlue.copy(alpha = 0.8f)
                     )
                 )
             )
@@ -57,7 +59,6 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // App Logo Placeholder Area
             Surface(
                 modifier = Modifier.size(110.dp),
                 shape = CircleShape,
@@ -93,7 +94,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Login Content Card
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(32.dp),
@@ -110,7 +110,7 @@ fun LoginScreen(
                         text = "Welcome",
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = Color.Black
                         )
                     )
 
@@ -118,14 +118,14 @@ fun LoginScreen(
                         text = "Sign in to join groups and start learning together.",
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color.Gray,
                         modifier = Modifier.padding(top = 8.dp, bottom = 32.dp)
                     )
 
                     if (authState is AuthState.Loading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(44.dp),
-                            color = MaterialTheme.colorScheme.primary
+                            color = PrimaryBlue
                         )
                     } else {
                         Button(
@@ -137,7 +137,7 @@ fun LoginScreen(
                                 .height(56.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
+                                containerColor = PrimaryBlue
                             )
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
