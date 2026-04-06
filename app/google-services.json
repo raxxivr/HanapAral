@@ -1,26 +1,44 @@
 {
   "project_info": {
-    "project_number": "718143544708",
-    "project_id": "itew4-projects",
-    "storage_bucket": "itew4-projects.firebasestorage.app"
+    "project_number": "465620290129",
+    "project_id": "fir-authcompose-a2104",
+    "storage_bucket": "fir-authcompose-a2104.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:718143544708:android:5b50e1345b748db9bbd1d1",
+        "mobilesdk_app_id": "1:465620290129:android:fe7b9f31e3e4e83a4a8670",
         "android_client_info": {
-          "package_name": "com.example.hanaparal"
+          "package_name": "com.example.hanaparal.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "465620290129-7f9q9jls8brkf2rmsq1eondjbderipnv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hanaparal.app",
+            "certificate_hash": "75a3edf88fa8cc9d7455a4425fe1447cdd264da6"
+          }
+        },
+        {
+          "client_id": "465620290129-c66fsaepkd96p4ltngeeo4fia1lo76c3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyD6Dw1Ppnnkn9dn72CcO5KigFUzzjbyjZQ"
+          "current_key": "AIzaSyA6JExqlWYzfiB3wiJqvarSOAUyYlTDUog"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "465620290129-c66fsaepkd96p4ltngeeo4fia1lo76c3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
